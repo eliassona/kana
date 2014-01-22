@@ -1,8 +1,6 @@
 (ns kana.core
   (:use [clojure.pprint])
-  (:require [instaparse.core :as insta]
-            ;[clojure.math.combinatorics :refer [subsets]]
-            ))
+  )
 
 
 
@@ -13,26 +11,48 @@
 
 
 
-(def kana-grammar
-  (insta/parser
-   "S = ('a'   | 'i'  | 'u'  | 'e'  | 'o'  | 'n' |
-         'ka'  | 'ki' | 'ku' | 'ke' | 'ko' |
-         'sa'  | 'shi' | 'su' | 'se' | 'so' |
-         'za'  | 'zi' | 'zu' | 'ze' | 'zo' |
-         'ta'  | 'chi' | 'tu' | 'te' | 'to' |
-         'da'  | 'di' | 'du' | 'de' | 'do' |
-         'na'  | 'ni' | 'nu' | 'ne' | 'no' |
-         'ha'  | 'hi' | 'hu' | 'he' | 'ho' |
-         'ba'  | 'bi' | 'bu' | 'be' | 'bo' |
-         'pa'  | 'pi' | 'pu' | 'pe' | 'po' |
-         'ma'  | 'mi' | 'mu' | 'me' | 'mo' |
-         'ya'  | 'yu' | 'yo' |
-         'ra'  | 'ri' | 'ru' | 're' | 'ro' |
-         'wa'  | 'wu' | 'we' | 'wo' |
-         'sha' | 'shu' | 'sho')*
 
 
-"))
+(def kana-vocabulary
+   ["a"     "i"    "u"    "e"    "o"    "n"  
+         "ka"    "ki"   "ku"   "ke"   "ko"  
+         "sa"    "shi"   "su"   "se"   "so"  
+         "za"    "zi"   "zu"   "ze"   "zo"  
+         "ta"    "chi"   "tu"   "te"   "to"  
+         "da"    "di"   "du"   "de"   "do"  
+         "na"    "ni"   "nu"   "ne"   "no"  
+         "ha"    "hi"   "hu"   "he"   "ho"  
+         "ba"    "bi"   "bu"   "be"   "bo"  
+         "pa"    "pi"   "pu"   "pe"   "po"  
+         "ma"    "mi"   "mu"   "me"   "mo"  
+         "ya"    "yu"   "yo"  
+         "ra"    "ri"   "ru"   "re"   "ro"  
+         "wa"    "wu"   "we"   "wo"  
+         "sha"   "shu"   "sho"])
+
+(def kana-vocabulary-as-set
+  (into #{} kana-vocabulary))
+
+(def max-length (->> (map #(.length %) kana-vocabulary) (apply max)))
+
+
+(defn length-first [s]
+  (loop [wl (min (.length s) max-length)]
+    (if (> wl 0) 
+      (let [ka (.substring s 0 wl)]
+        (if (contains? kana-vocabulary-as-set ka)
+          ka
+          (recur (dec wl))))
+      (throw (IllegalStateException.)))
+    ))
+
+(defn kana-grammar [alphabet]
+  (loop [s alphabet
+         res []]
+    (if (= (.length s) 0)
+      res
+      (let [k (length-first s)]
+        (recur (.substring s (.length k)) (conj res k))))))
 
 (def alphabet-hiragana
   [
@@ -155,47 +175,8 @@
 
 
 (defn hiragana-of [alphabet]
-  (->> (kana-grammar alphabet) (rest) (map #(alphabet-to-hiragana-map %)) (reduce str))
+  (->> (kana-grammar alphabet) (map #(alphabet-to-hiragana-map %)) (reduce str))
   )
 
 ;;------------------------------------------------------------------------------------
 
-;;knapsack
-
-
-(comment 
-(defn all-combinations-of  [items]
-  {:pre [
-         ]}
-  (subsets items))
-
-(defn find-items [all-combinations max-weight]
-  (filter
-   (fn [l]
-     (if (empty? l)
-       false
-       (< (reduce + (map second l))  max-weight)))
-    all-combinations))
-
-(defn find-max [combinations]
-  (loop [combs combinations
-         m (first combinations)]
-    (if (empty? combs)
-      m
-      (let [sum (fn [l] (reduce + (map first l)))
-            f (first combs)
-            v (sum f)]
-        (recur
-         (rest combs)
-         (if (> v (sum m))
-           f
-           m))))))
-
-(defn knapsack [items max-weight]
-  (-> (all-combinations-of items) (find-items max-weight) (find-max)))
-
-
-                
-(def items
-  [[5 3] [2 4] [6 13] [5 10] [11 4] [2 4] [14 9]])
-)                
