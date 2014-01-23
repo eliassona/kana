@@ -1,58 +1,67 @@
 (ns kana.core
-  (:use [clojure.pprint])
+  (:refer-clojure :exclude [==])
+;  (
+    ;:use clojure.core.logic
+       ;clojure.core.logic.arithmetic
+ ;      )
   )
 
 
+(comment 
+  (cemerick.austin.repls/exec :exec-cmds ["open" "-ga" "/Applications/Google Chrome.app"])
+  (ns hej (:require [kana.core :refer [hiragana-of kana-vocabulary]])) 
+)
 
-(defmacro dbg [body]
-  `(let [x# ~body]
-     (println "dbg:" '~body "=" x#)
-     x#))
 
+
+(defn max-length [l] 
+  (->> (map #(.-length %) l) (apply max)))
+
+(def max-length-memo 
+  (memoize max-length))
+  
+(defn kana-grammar [alphabet vocabulary]
+  (let [l-fn 
+        (fn [s]
+          (loop [wl (min (.-length s) (max-length-memo vocabulary))]
+				    (if (> wl 0) 
+				      (let [ka (.substring s 0 wl)]
+				        (if (contains? vocabulary ka)
+				          ka
+				          (recur (dec wl))))
+				      (assert false (str s " is not valid")))
+				    ))]
+	  (loop [s alphabet
+	         res []]
+	    (if (= (.-length s) 0)
+	      res
+	      (let [k (l-fn s)]
+	        (recur (.substring s (.-length k)) (conj res k)))))))
 
 
 
 
 (def kana-vocabulary
    ["a"     "i"    "u"    "e"    "o"    "n"  
-         "ka"    "ki"   "ku"   "ke"   "ko"  
-         "sa"    "shi"   "su"   "se"   "so"  
-         "za"    "zi"   "zu"   "ze"   "zo"  
-         "ta"    "chi"   "tu"   "te"   "to"  
-         "da"    "di"   "du"   "de"   "do"  
-         "na"    "ni"   "nu"   "ne"   "no"  
-         "ha"    "hi"   "hu"   "he"   "ho"  
-         "ba"    "bi"   "bu"   "be"   "bo"  
-         "pa"    "pi"   "pu"   "pe"   "po"  
-         "ma"    "mi"   "mu"   "me"   "mo"  
-         "ya"    "yu"   "yo"  
-         "ra"    "ri"   "ru"   "re"   "ro"  
-         "wa"    "wu"   "we"   "wo"  
-         "sha"   "shu"   "sho"])
+     "ka"    "ki"   "ku"   "ke"   "ko"  
+     "sa"    "shi"   "su"   "se"   "so"  
+     "za"    "zi"   "zu"   "ze"   "zo"  
+     "ta"    "chi"   "tu"   "te"   "to"  
+     "da"    "di"   "du"   "de"   "do"  
+     "na"    "ni"   "nu"   "ne"   "no"  
+     "ha"    "hi"   "hu"   "he"   "ho"  
+     "ba"    "bi"   "bu"   "be"   "bo"  
+     "pa"    "pi"   "pu"   "pe"   "po"  
+     "ma"    "mi"   "mu"   "me"   "mo"  
+     "ya"    "yu"   "yo"  
+     "ra"    "ri"   "ru"   "re"   "ro"  
+     "wa"    "wu"   "we"   "wo"  
+     "sha"   "shu"   "sho"])
 
 (def kana-vocabulary-as-set
   (into #{} kana-vocabulary))
 
-(def max-length (->> (map #(.length %) kana-vocabulary) (apply max)))
 
-
-(defn length-first [s]
-  (loop [wl (min (.length s) max-length)]
-    (if (> wl 0) 
-      (let [ka (.substring s 0 wl)]
-        (if (contains? kana-vocabulary-as-set ka)
-          ka
-          (recur (dec wl))))
-      (throw (IllegalStateException.)))
-    ))
-
-(defn kana-grammar [alphabet]
-  (loop [s alphabet
-         res []]
-    (if (= (.length s) 0)
-      res
-      (let [k (length-first s)]
-        (recur (.substring s (.length k)) (conj res k))))))
 
 (def alphabet-hiragana
   [
@@ -168,15 +177,31 @@
 (def hiragana-to-alphabet-map
  (apply hash-map (mapcat reverse (filter (fn [[_ v]] v) (partition 2 alphabet-hiragana)))))
 
+(def hiragana-vocabulary-as-set (into #{} (keys hiragana-to-alphabet-map)))
+
+
 (def vowels #{"a" "i" "u" "e" "o"})
 
 (def consonants #{"k" "s" "z" "t" "d" "h" "b" "p" "m" "y" "r" "w" "sh" "ch" "n"})
 
+(defn translate [word vocabulary voc-map] (->> (kana-grammar word vocabulary) (map #(voc-map %)) (reduce str)))
 
 
-(defn hiragana-of [alphabet]
-  (->> (kana-grammar alphabet) (map #(alphabet-to-hiragana-map %)) (reduce str))
+(defn hiragana-of [alphabet-word]
+  (translate alphabet-word kana-vocabulary-as-set alphabet-to-hiragana-map)
+  )
+
+(defn alphabet-of [hiragana-word]
+  (translate hiragana-word hiragana-vocabulary-as-set hiragana-to-alphabet-map)
   )
 
 ;;------------------------------------------------------------------------------------
 
+
+;(defne kana-grammaro ø
+;  )
+
+(comment
+  (run* [q] (kana-grammaro q ["sa" "ka" "na"]))
+  (run* [q] (fresh [a b c] (kana-grammaro "sakana" [a b c])))
+  )

@@ -4,5 +4,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="/runtime/java/clojure/clojure-1.5.1/clojure-1.5.1.jar"/>
 	<classpathentry kind="lib" path="/Users/eliassonaand/.m2/repository/instaparse/instaparse/1.2.2/instaparse-1.2.2.jar"/>
+	<classpathentry kind="lib" path="/Users/eliassonaand/.m2/repository/org/clojure/core.logic/0.8.5/core.logic-0.8.5.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

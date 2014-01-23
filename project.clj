@@ -1,6 +1,7 @@
 (defproject kana "NOT_DEPLOYED"
   :source-paths ["src/clj" "src/cljs"]
   :dependencies [[org.clojure/clojure "1.5.1"]
+                 [org.clojure/core.logic "0.8.5"]
                  [org.clojure/clojurescript "0.0-2138"]
                  ]
   :profiles {:dev {:repl-options {:init-ns kana.core}
