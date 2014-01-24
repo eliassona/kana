@@ -1,9 +1,4 @@
 (ns kana.core
-  (:refer-clojure :exclude [==])
-;  (
-    ;:use clojure.core.logic
-       ;clojure.core.logic.arithmetic
- ;      )
   )
 
 
@@ -57,6 +52,7 @@
 (def kana-vocabulary
    ["a"     "i"    "u"    "e"    "o"    "n"  
      "ka"    "ki"   "ku"   "ke"   "ko"  
+     "ga"    "gi"   "gu"   "ge"   "go"  
      "sa"    "shi"   "su"   "se"   "so"  
      "za"    "zi"   "zu"   "ze"   "zo"  
      "ta"    "chi"   "tu"   "te"   "to"  
@@ -71,10 +67,16 @@
      "wa"    "wu"   "we"   "wo"  
      "sha"   "shu"   "sho"])
 
+
 (def kana-vocabulary-as-set
   (into #{} kana-vocabulary))
 
 
+
+(defn hiragana-char? [ch]
+  (or 
+    (and (>= ch 0x3040) (<= ch 0x309F)) 
+    (and (>= ch 0x1B000) (<= ch 0x1B0FF))))
 
 (def alphabet-hiragana
   [
@@ -183,6 +185,16 @@
    "sho"  "\u3057\u3087"
    ])
 
+
+
+(defn katakana-char? [ch]
+  (or 
+    (and (>= ch 0x30A0) (<= ch 0x30FF))
+    (and (>= ch 0x31F0) (<= ch 0x31FF))
+    (and (>= ch 0x3200) (<= ch 0x32FF))
+    (and (>= ch 0xFF00) (<= ch 0xFFEF))
+    (and (>= ch 0x1B000) (<= ch 0x1B0FF))))
+    
 (def alphabet-katakana
   [
    "a" "\u30a2"
@@ -199,9 +211,9 @@
 
    "ga" "\u30ac"
    "gi" "\u30ae"
-   "gu" "\u30a0"
-   "ge" "\u30a2"
-   "go" "\u30a4"
+   "gu" "\u30b0"
+   "ge" "\u30b2"
+   "go" "\u30b4"
 
 
    "sa" "\u30b5"
@@ -312,24 +324,25 @@
 
 (defn translate [word vocabulary voc-map] (->> (kana-grammar word vocabulary) (map #(voc-map %)) (reduce str)))
 
+(defn partition-word [word]
+  (partition-by 
+    #(let [uc (int %)]
+       (cond (hiragana-char? uc) 1
+             (katakana-char? uc) 2
+             :else 0)) 
+    word))
 
 (defn alphabet-of [word]
-  (let [parts (partition-by 
-                #(let [s (str %)]
-                   (cond (contains? hiragana-vocabulary-as-set s) 1
-                         (contains? katakana-vocabulary-as-set s) 2
-                         :else 0)) 
-                word)]
-    (apply str (map #(let [s (apply str %)
-                           ch (.substring s 0 1)]
-                       (cond 
-                         (contains? hiragana-vocabulary-as-set ch)
-                         (translate s hiragana-vocabulary-as-set hiragana-to-alphabet-map)
-                         (contains? katakana-vocabulary-as-set ch)
-                         (translate s katakana-vocabulary-as-set katakana-to-alphabet-map)
-                         :else 
-                         s))
-                         parts))))
+  (apply str (map #(let [s (apply str %)
+                         ch (.substring s 0 1)]
+                     (cond 
+                       (contains? hiragana-vocabulary-as-set ch)
+                       (translate s hiragana-vocabulary-as-set hiragana-to-alphabet-map)
+                       (contains? katakana-vocabulary-as-set ch)
+                       (translate s katakana-vocabulary-as-set katakana-to-alphabet-map)
+                       :else 
+                       s))
+                       (partition-word word))))
 
 (defn hiragana-of [word]
   (translate (alphabet-of word) kana-vocabulary-as-set alphabet-to-hiragana-map)
@@ -359,10 +372,3 @@
 ;;------------------------------------------------------------------------------------
 
 
-;(defne kana-grammaro ø
-;  )
-
-(comment
-  (run* [q] (kana-grammaro q ["sa" "ka" "na"]))
-  (run* [q] (fresh [a b c] (kana-grammaro "sakana" [a b c])))
-  )
