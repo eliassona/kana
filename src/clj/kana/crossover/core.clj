@@ -1,20 +1,18 @@
-(ns kana.core
-  )
+(ns kana.crossover.core)
 
 
 (comment 
   (cemerick.austin.repls/exec :exec-cmds ["open" "-ga" "/Applications/Google Chrome.app"])
-  (ns hej (:require [kana.core :refer [hiragana-of kana-vocabulary]])) 
+  (ns hej (:require [kana.crossover.core :refer [hiragana-of katakana-of alphabeth-of kana-vocabulary]])) 
 )
 
 
-
+(comment
 (defmacro dbg [body]
   `(let [x# ~body]
      (println "dbg:" '~body "=" x#)
      x#))
-
-
+)
 (defn max-length [l] 
   (->> (map #(.-length %) l) (apply max)))
 

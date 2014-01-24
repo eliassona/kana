@@ -1,6 +1,6 @@
 (ns kana.core-test
   (:use clojure.test
-        kana.core))
+        kana.crossover.core))
 
 (deftest kana-to-hiragana
   (is (= "あ" (hiragana-of "a")))
