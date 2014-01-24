@@ -332,11 +332,28 @@
                          parts))))
 
 (defn hiragana-of [word]
-  (translate (to-alphabet word) kana-vocabulary-as-set alphabet-to-hiragana-map)
+  (translate (alphabet-of word) kana-vocabulary-as-set alphabet-to-hiragana-map)
   )
 
 (defn katakana-of [word]
-  (translate (to-alphabet word) kana-vocabulary-as-set alphabet-to-katakana-map)
+  (translate (alphabet-of word) kana-vocabulary-as-set alphabet-to-katakana-map)
+  )
+
+(def english-japanese
+  ["fish" "sakana"]
+  )
+(def japanese-to-english-map
+  (reverse-map english-japanese))
+
+(def english-to-japanese-map
+  (apply hash-map english-japanese)
+  )
+
+(defn japanese-of [word]
+  (english-to-japanese-map word)
+  )
+(defn english-of [word]
+  (japanese-to-english-map (alphabet-of word))
   )
 
 ;;------------------------------------------------------------------------------------
